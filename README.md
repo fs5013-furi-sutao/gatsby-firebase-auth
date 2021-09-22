@@ -1,105 +1,749 @@
-<!-- AUTO-GENERATED-CONTENT:START (STARTER) -->
 <p align="center">
   <a href="https://www.gatsbyjs.com">
     <img alt="Gatsby" src="https://www.gatsbyjs.com/Gatsby-Monogram.svg" width="60" />
   </a>
 </p>
-<h1 align="center">
-  Gatsby's default starter
-</h1>
 
-Kick off your project with this default boilerplate. This starter ships with the main Gatsby configuration files you might need to get up and running blazing fast with the blazing fast app generator for React.
+## プラグインのインストール
 
-_Have another more specific idea? You may want to check out our vibrant collection of [official and community-created starters](https://www.gatsbyjs.com/docs/gatsby-starters/)._
+3つのプラグインをインストールする
 
-## 🚀 Quick start
+``` console
+yarn add dotenv firebase gatsby-plugin-firebase
+```
 
-1.  **Create a Gatsby site.**
+``` json
+{
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "firebase": "^7.24.0",
+    "gatsby-plugin-firebase": "^0.2.0-beta.4",
+  },
+}
+```
 
-    Use the Gatsby CLI ([install instructions](https://www.gatsbyjs.com/docs/tutorial/part-0/#gatsby-cli)) to create a new site, specifying the default starter.
+## .env ファイルの作成
 
-    ```shell
-    # create a new Gatsby site using the default starter
-    gatsby new my-default-starter https://github.com/gatsbyjs/gatsby-starter-default
-    ```
+ルートに .env ファイル作成し、Firebase の API キーを記載する
 
-1.  **Start developing.**
+``` txt
+API_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+AUTH_DOMAIN=XXXX.firebaseapp.com
+DATABASE_URL=https://XXXX.firebaseio.com
+PROJECT_ID=XXXX-XXXX-XXXX-XXXX
+STORAGE_BUCKET=XXXX.appspot.com
+MESSAGING_SENDER_ID=000000000000
+APP_ID=0:000000000000:web:XXXXXXXXXXXXXXXXXXXXXX
+```
 
-    Navigate into your new site’s directory and start it up.
+## gatsby-config への追記
 
-    ```shell
-    cd my-default-starter/
-    gatsby develop
-    ```
+Firebase authentication のクレデンシャル情報を .env ファイルから読み込めるようにする。
 
-1.  **Open the source code and start editing!**
+``` js
+require('dotenv').config()
 
-    Your site is now running at `http://localhost:8000`!
+module.exports = {
+  plugins: [
+    {
+      resolve: "gatsby-plugin-firebase",
+      options: {
+        credentials: {
+          apiKey: process.env.API_KEY,
+          authDomain: process.env.AUTH_DOMAIN,
+          databaseURL: process.env.DATABASE_URL,
+          projectId: process.env.PROJECT_ID,
+          storageBucket: process.env.STORAGE_BUCKET,
+          messagingSenderId: process.env.MESSAGING_SENDER_ID,
+          appId: process.env.APP_ID,
+        },
+      },
+    },
+  ],
+}
+```
 
-    _Note: You'll also see a second link: _`http://localhost:8000/___graphql`_. This is a tool you can use to experiment with querying your data. Learn more about using this tool in the [Gatsby tutorial](https://www.gatsbyjs.com/tutorial/part-five/#introducing-graphiql)._
+## AuthProvider の作成
 
-    Open the `my-default-starter` directory in your code editor of choice and edit `src/pages/index.js`. Save your changes and the browser will update in real time!
+src/context/auth.jsx
 
-## 🚀 Quick start (Gatsby Cloud)
+``` jsx
+import React, { createContext, useState, useEffect } from 'react'
+import firebase from 'gatsby-plugin-firebase'
 
-Deploy this starter with one click on [Gatsby Cloud](https://www.gatsbyjs.com/cloud/):
+export const AuthContext = createContext({})
 
-[<img src="https://www.gatsbyjs.com/deploynow.svg" alt="Deploy to Gatsby Cloud">](https://www.gatsbyjs.com/dashboard/deploynow?url=https://github.com/gatsbyjs/gatsby-starter-default)
+const AuthProvider = ({ children }) => {
+    const [user, setUser] = useState()
 
-## 🧐 What's inside?
+    useEffect(() => {
+        firebase.auth().onAuthStateChanged(user => setUser(user))
+    }, [])
 
-A quick look at the top-level files and directories you'll see in a Gatsby project.
+    return (
+        <AuthContext.Provider value={{ user, setUser }}>
+            {children}
+        </AuthContext.Provider>
+    )
+}
 
-    .
-    ├── node_modules
-    ├── src
-    ├── .gitignore
-    ├── .prettierrc
-    ├── gatsby-browser.js
-    ├── gatsby-config.js
-    ├── gatsby-node.js
-    ├── gatsby-ssr.js
-    ├── LICENSE
-    ├── package-lock.json
-    ├── package.json
-    └── README.md
+export default AuthProvider
+```
 
-1.  **`/node_modules`**: This directory contains all of the modules of code that your project depends on (npm packages) are automatically installed.
+## Gatsby Browser API の修正
 
-2.  **`/src`**: This directory will contain all of the code related to what you will see on the front-end of your site (what you see in the browser) such as your site header or a page template. `src` is a convention for “source code”.
+gatsby-browser.js
 
-3.  **`.gitignore`**: This file tells git which files it should not track / not maintain a version history for.
+``` jsx
+import 'firebase/auth'
+import React from 'react'
+import AuthProvider from './src/context/auth'
 
-4.  **`.prettierrc`**: This is a configuration file for [Prettier](https://prettier.io/). Prettier is a tool to help keep the formatting of your code consistent.
+export const wrapPageElement = ({ element, props }) => {
 
-5.  **`gatsby-browser.js`**: This file is where Gatsby expects to find any usage of the [Gatsby browser APIs](https://www.gatsbyjs.com/docs/reference/config-files/gatsby-browser/) (if any). These allow customization/extension of default Gatsby settings affecting the browser.
+    return (
+        <AuthProvider {...props} >
+            {element}
+        </AuthProvider >
+    )
+}
+```
 
-6.  **`gatsby-config.js`**: This is the main configuration file for a Gatsby site. This is where you can specify information about your site (metadata) like the site title and description, which Gatsby plugins you’d like to include, etc. (Check out the [config docs](https://www.gatsbyjs.com/docs/reference/config-files/gatsby-config/) for more detail).
+## 必要な Components を揃える
 
-7.  **`gatsby-node.js`**: This file is where Gatsby expects to find any usage of the [Gatsby Node APIs](https://www.gatsbyjs.com/docs/reference/config-files/gatsby-node/) (if any). These allow customization/extension of default Gatsby settings affecting pieces of the site build process.
+### header.jsx
 
-8.  **`gatsby-ssr.js`**: This file is where Gatsby expects to find any usage of the [Gatsby server-side rendering APIs](https://www.gatsbyjs.com/docs/reference/config-files/gatsby-ssr/) (if any). These allow customization of default Gatsby settings affecting server-side rendering.
+header.js を編集する。
 
-9.  **`LICENSE`**: This Gatsby starter is licensed under the 0BSD license. This means that you can see this file as a placeholder and replace it with your own license.
+``` jsx
+import React, { useContext } from "react"
+import PropTypes from "prop-types"
+import { Link, navigate } from "gatsby"
 
-10. **`package-lock.json`** (See `package.json` below, first). This is an automatically generated file based on the exact versions of your npm dependencies that were installed for your project. **(You won’t change this file directly).**
+import { AuthContext } from "../context/auth"
+import firebase from 'gatsby-plugin-firebase'
 
-11. **`package.json`**: A manifest file for Node.js projects, which includes things like metadata (the project’s name, author, etc). This manifest is how npm knows which packages to install for your project.
+const Header = ({ siteTitle, props }) => {
+  const { user } = useContext(AuthContext)
 
-12. **`README.md`**: A text file containing useful reference information about your project.
+  const { path } = props
+  console.log('path=')
+  console.log(path)
+  const handleLogout = async () => {
+    await firebase.auth().signOut()
+    navigate("/login")
+  }
 
-## 🎓 Learning Gatsby
+  return (
+    <header>
 
-Looking for more guidance? Full documentation for Gatsby lives [on the website](https://www.gatsbyjs.com/). Here are some places to start:
+      <div className="header-container">
+        <h1 className="site-title">
+          <Link to="/">
+            {siteTitle}
+          </Link>
+        </h1>
 
-- **For most developers, we recommend starting with our [in-depth tutorial for creating a site with Gatsby](https://www.gatsbyjs.com/tutorial/).** It starts with zero assumptions about your level of ability and walks through every step of the process.
+        <div className="button-container">
+          {!user ? (
+            <>
+              {path !== '/login/' ? (
+                <div>
+                  <button className="header-button">
+                    <Link to="/login">
+                      ログイン
+                    </Link>
+                  </button>
+                </div>
+              ) : <></>
+              }
 
-- **To dive straight into code samples, head [to our documentation](https://www.gatsbyjs.com/docs/).** In particular, check out the _Guides_, _API Reference_, and _Advanced Tutorials_ sections in the sidebar.
+              {path !== '/register/' ? (
+                <div>
+                  <button className="header-button">
+                    <Link to="/register">
+                      登録
+                    </Link>
+                  </button>
+                </div>
+              ) : <></>
+              }
+            </>
+          ) :
+            (
+              <>
+                <p className="header-disp-name" >{user.displayName}</p>
+                <div>
+                  <button className="header-button" onClick={handleLogout}>
+                    <Link to="#!">
+                      ログアウト
+                    </Link>
+                  </button>
+                </div>
+              </>)
+          }
+        </div>
 
-## 💫 Deploy
+      </div>
+    </header >
+  )
+}
 
-[Build, Deploy, and Host On The Only Cloud Built For Gatsby](https://www.gatsbyjs.com/products/cloud/)
+Header.propTypes = {
+  siteTitle: PropTypes.string,
+}
 
-Gatsby Cloud is an end-to-end cloud platform specifically built for the Gatsby framework that combines a modern developer experience with an optimized, global edge network.
+Header.defaultProps = {
+  siteTitle: ``,
+}
 
-<!-- AUTO-GENERATED-CONTENT:END -->
+export default Header
+```
+
+### layout.jsx
+
+layout.js を編集する。
+
+``` jsx
+import React, { useContext } from 'react'
+import PropTypes from 'prop-types'
+import { useStaticQuery, graphql } from 'gatsby'
+
+import Header from './header'
+import './layout.css'
+import { AuthContext } from '../context/auth'
+
+const Layout = ({ children, props }) => {
+  const { user } = useContext(AuthContext)
+
+  const data = useStaticQuery(graphql`
+    query SiteTitleQuery {
+      site {
+        siteMetadata {
+          title
+        }
+      }
+    }
+  `)
+  const { path } = props
+
+  return (
+    <>
+      <Header props={props} siteTitle={data.site.siteMetadata?.title || `Title`} />
+      <div className="container">
+        {
+
+          path === '/' || path === '/login/' || path === '/register/' ?
+            (<main>{children}</main>) :
+            !user ?
+              (<main>アクセス禁止</main>) : (<main>{children}</main>)
+        }
+        <footer
+          style={{
+            marginTop: `2rem`,
+          }}
+        >
+          &copy; {new Date().getFullYear()}, Built with
+          {` `}
+          <a href="https://www.gatsbyjs.com">Gatsby</a>
+        </footer>
+      </div>
+    </>
+  )
+}
+
+Layout.propTypes = {
+  children: PropTypes.node.isRequired,
+}
+
+export default Layout
+```
+
+### login-core.jsx
+
+ログインフォーム部品として新規作成する。
+
+``` jsx
+import React, { useState, useContext } from 'react'
+import firebase from 'gatsby-plugin-firebase'
+import { AuthContext } from '../context/auth'
+import { navigate } from 'gatsby'
+
+const LoginCore = () => {
+    const [data, setData] = useState({
+        email: "",
+        password: "",
+        code: null,
+        error: null,
+    })
+
+    const parseCodeToJaErrorMessage = (e) => {
+        switch (e.code) {
+            case 'auth/cancelled-popup-request':
+            case 'auth/popup-closed-by-user':
+                return null;
+            case 'auth/email-already-in-use':
+                return 'メールアドレスまたはパスワードが違います';
+            case 'auth/invalid-email':
+                return 'メールアドレスの形式が正しくありません';
+            case 'auth/user-disabled':
+                return 'サービスの利用が停止されています';
+            case 'auth/user-not-found':
+                return 'メールアドレスまたはパスワードが違います';
+            case 'auth/user-mismatch':
+                return 'メールアドレスまたはパスワードが違います';
+            case 'auth/weak-password':
+                return 'パスワードは6文字以上にしてください';
+            case 'auth/wrong-password':
+                return 'メールアドレスまたはパスワードが違います';
+            case 'auth/popup-blocked':
+                return '認証ポップアップがブロックされました。ポップアップブロックをご利用の場合は設定を解除してください';
+            case 'auth/operation-not-supported-in-this-environment':
+            case 'auth/auth-domain-config-required':
+            case 'auth/operation-not-allowed':
+            case 'auth/unauthorized-domain':
+                return '現在この認証方法はご利用頂けません';
+            case 'auth/requires-recent-login':
+                return '認証の有効期限が切れています';
+            default:
+                return '認証に失敗しました。しばらく時間をおいて再度お試しください';
+
+        }
+    }
+
+    const { setUser } = useContext(AuthContext)
+
+    const handleChange = e => {
+        setData({ ...data, [e.target.name]: e.target.value })
+    }
+
+    const handleSubmit = async e => {
+        e.preventDefault()
+        setData({ ...data, error: null })
+        try {
+            const result = await firebase
+                .auth()
+                .signInWithEmailAndPassword(data.email, data.password)
+            setUser(result)
+            navigate("/")
+            window.location.replace("/")
+        } catch (err) {
+            setData({ ...data, error: err.message, code: err.code })
+        }
+    }
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <div className="form-container">
+                <label className="form-label" htmlFor="email">
+                    メールアドレス
+                </label>
+                <input className="form-input"
+                    type="text"
+                    name="email"
+                    value={data.email}
+                    onChange={handleChange}
+                    placeholder="example@freestyles.jp"
+                />
+                <div>
+                    <label className="form-label" htmlFor="password">
+                        パスワード
+                    </label>
+                    <input className="form-input"
+                        type="password"
+                        name="password"
+                        value={data.password}
+                        onChange={handleChange}
+                        placeholder="password"
+                    />
+                </div>
+                {data.error ? <p className="error-message">{parseCodeToJaErrorMessage(data)}</p> : <p>&nbsp;</p>}
+            </div>
+            <input className="form-button" type="submit" value="ログインする" />
+        </form>
+    )
+}
+
+export default LoginCore
+```
+
+### register-core.jsx
+
+ユーザー登録フォーム部品として新規作成する。
+
+``` jsx
+import React, { useState, useContext } from 'react'
+import firebase from 'gatsby-plugin-firebase'
+import { AuthContext } from '../context/auth'
+import { navigate } from 'gatsby'
+
+const RegisterCore = () => {
+    const [data, setData] = useState({
+        displayName: "",
+        email: "",
+        password: "",
+        code: null,
+        error: null,
+    })
+
+    const parseCodeToJaErrorMessage = (e) => {
+        switch (e.code) {
+            case 'auth/cancelled-popup-request':
+            case 'auth/popup-closed-by-user':
+                return null;
+            case 'auth/email-already-in-use':
+                return 'メールアドレスまたはパスワードが違います';
+            case 'auth/invalid-email':
+                return 'メールアドレスの形式が正しくありません';
+            case 'auth/user-disabled':
+                return 'サービスの利用が停止されています';
+            case 'auth/user-not-found':
+                return 'メールアドレスまたはパスワードが違います';
+            case 'auth/user-mismatch':
+                return 'メールアドレスまたはパスワードが違います';
+            case 'auth/weak-password':
+                return 'パスワードは6文字以上にしてください';
+            case 'auth/wrong-password':
+                return 'メールアドレスまたはパスワードが違います';
+            case 'auth/popup-blocked':
+                return '認証ポップアップがブロックされました。ポップアップブロックをご利用の場合は設定を解除してください';
+            case 'auth/operation-not-supported-in-this-environment':
+            case 'auth/auth-domain-config-required':
+            case 'auth/operation-not-allowed':
+            case 'auth/unauthorized-domain':
+                return '現在この認証方法はご利用頂けません';
+            case 'auth/requires-recent-login':
+                return '認証の有効期限が切れています';
+            default:
+                return '認証に失敗しました。しばらく時間をおいて再度お試しください';
+        }
+    }
+
+    const { setUser } = useContext(AuthContext)
+
+    const handleChange = e => {
+        setData({ ...data, [e.target.name]: e.target.value })
+    }
+
+    const handleSubmit = async e => {
+        e.preventDefault()
+        setData({ ...data, error: null })
+        try {
+            const result = await firebase
+                .auth()
+                .createUserWithEmailAndPassword(data.email, data.password)
+
+            const user = await firebase.auth().currentUser
+            user.updateProfile({
+                displayName: data.displayName
+            })
+
+            setUser(result)
+
+            navigate("/")
+        } catch (err) {
+            setData({ ...data, error: err.message, code: err.code })
+        }
+    }
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <div className="form-container">
+                <label className="form-label" htmlFor="displayName">氏名</label>
+                <input class="form-input"
+                        type="text"
+                        name="displayName"
+                        value={data.displayName}
+                        onChange={handleChange}
+                />
+                <label className="form-label" htmlFor="email">
+                    メールアドレス
+                </label>
+                <input className="form-input"
+                    type="text"
+                    name="email"
+                    value={data.email}
+                    onChange={handleChange}
+                    placeholder="example@freestyles.jp"
+                />
+                <div>
+                    <label className="form-label" htmlFor="password">
+                        パスワード
+                    </label>
+                    <input className="form-input"
+                        type="password"
+                        name="password"
+                        value={data.password}
+                        onChange={handleChange}
+                        placeholder="password"
+                    />
+                </div>
+                {data.error ? <p className="error-message">{parseCodeToJaErrorMessage(data)}</p> : <p>&nbsp;</p>}
+            </div>
+            <input className="form-button" type="submit" value="登録する" />
+        </form>
+    )
+}
+
+export default RegisterCore
+```
+
+## pages の編集
+
+### index.jsx 
+
+``` jsx
+import React from "react"
+import { Link } from "gatsby"
+import { StaticImage } from "gatsby-plugin-image"
+
+import Layout from "../components/layout"
+import Seo from "../components/seo"
+
+const IndexPage = ({ ...props }) => (
+
+  <Layout props={props}>
+    <Seo title="Home" />
+    <h1>Welcome Page</h1>
+    <p>Gatsby に Firebase Authentication を組み込んだテストプロジェクトです。</p>
+    <StaticImage
+      src="../images/gatsby-astronaut.png"
+      width={300}
+      quality={95}
+      formats={["auto", "webp", "avif"]}
+      alt="A Gatsby astronaut"
+      style={{ marginBottom: `1.45rem` }}
+    />
+
+    <div>
+      <button className="form-button">
+        <Link to="/page-2/">次のページに進む</Link>
+      </button>
+      <button className="form-button">
+        <Link to="/using-typescript/">TypeScript ページに進む</Link>
+      </button>
+    </div>
+  </Layout>
+)
+
+export default IndexPage
+```
+
+### login.jsx
+
+``` jsx
+import React from 'react'
+
+import Layout from '../components/layout'
+import Seo from '../components/seo'
+import LoginCore from '../components/login-core'
+
+const LoginPage = ({ ...props }) => (
+  <Layout props={props}>
+    <Seo title="ログイン" />
+    <h1>ログイン</h1>
+    <p>管理者から届いたログイン情報を入力してください</p>
+    <LoginCore />
+  </Layout>
+)
+
+export default LoginPage
+```
+
+### register.jsx
+
+``` jsx
+import React from 'react'
+
+import Layout from '../components/layout'
+import Seo from '../components/seo'
+import RegisterCore from '../components/register-core'
+
+const RegisterPage = ({ ...props }) => (
+  <Layout props={props}>
+    <Seo title="ユーザー登録" />
+    <h1>ユーザー登録</h1>
+    ユーザを登録してください
+    <RegisterCore />
+  </Layout>
+)
+
+export default RegisterPage
+```
+
+### page-2.jsx
+
+``` jsx
+import * as React from 'react'
+import { Link } from 'gatsby'
+
+import Layout from '../components/layout'
+import Seo from '../components/seo'
+
+const SecondPage = ({ ...props }) => (
+  <Layout props={props}>
+    <Seo title="Page two" />
+    <h1>セカンドページ</h1>
+    <p>ようこそセカンドページへ。</p>
+
+    <div>
+      <button className="form-button">
+        <Link to="/">ウェルカムページに戻る</Link>
+      </button>
+    </div>
+  </Layout>
+)
+
+export default SecondPage
+```
+
+### using-typescript.tsx
+
+``` tsx
+// If you don't want to use TypeScript you can delete this file!
+import * as React from "react"
+import { PageProps, Link, graphql } from "gatsby"
+
+import Layout from "../components/layout"
+import Seo from "../components/seo"
+
+type DataProps = {
+  site: {
+    buildTime: string
+  }
+}
+
+const UsingTypescript: React.FC<PageProps<DataProps>> = ({ data, path, ...props }) => (
+  <Layout props={props}>
+    <Seo title="Using TypeScript" />
+    <h1>標準で TypeScript をサポートしています</h1>
+    <p>
+      ページやコンポーネントなどのために、<code>.ts/.tsx</code> ファイルを作成し、
+      記述することができます。なお、<code>gatsby-*.js</code> ファイル
+      (<code>gatsby-node.js</code> と同様)は、現在のところ TypeScript をサポートしていません。
+    </p>
+    <p>
+      タイプチェックのためには、npm 経由で typescript をインストールし、
+      <code>tsc --init</code> を実行して <code>tsconfig</code> ファイルを作成する必要があります。
+    </p>
+    <p>
+      あなたは現在、{data.site.buildTime} に作成された
+      「{path}」というページにいます。
+    </p>
+    <p>
+      もっと詳しく知りたい方は、{" "}
+      <a href="https://www.gatsbyjs.com/docs/typescript/">
+        TypeScript についてのドキュメント
+      </a>
+      をご覧ください。
+    </p>
+
+    <div>
+      <button className="form-button">
+        <Link to="/">ウェルカムページに戻る</Link>
+      </button>
+    </div>
+
+  </Layout>
+)
+
+export default UsingTypescript
+
+export const query = graphql`
+  {
+    site {
+      buildTime(formatString: "YYYY-MM-DD hh:mm a z")
+    }
+  }
+`
+```
+
+## CSS を追記する
+
+### layout.css
+
+src/components/layout.css
+
+``` css
+body {
+  font-family: 'メイリオ', georgia, serif;
+}
+
+.container {
+  margin: 0 auto;
+  max-width: 960px;
+  padding: 0 1.0875rem 1.45rem;
+}
+
+header {
+  background: rebeccapurple;
+  margin-bottom: 1.45rem;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: 960px;
+  padding: 1.45rem 1.0875rem;
+}
+
+.site-title a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.header-disp-name {
+  margin: 0.2em 2em;
+  color: #fff;
+  font-size: 1.0em;
+}
+
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.header-button {
+  margin-left: 2em;
+  padding: 0.2em 1em;
+  border-radius: 4px;
+  border: none;
+  background-color: #fff;
+  font-size: 0.8em;
+}
+
+.header-button a {
+  text-decoration: none;
+}
+
+.form-label {
+  display: block;
+}
+
+.form-input {
+  margin: 1em 0 2em 0;
+  padding: 0.4em 1em;
+}
+
+.form-button {
+  display: inline-block;
+  margin: 0 2em 4em 0;
+  padding: 1em 2em;
+  border-radius: 6px;
+  border: none;
+  background-color: rebeccapurple;
+  color: #fff;
+  font-size: 1.0em;
+  cursor: pointer;
+}
+
+.form-button a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.error-message {
+  color: red;
+}
+```
