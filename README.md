@@ -783,4 +783,4 @@ header {
 
 ログイン後に認証保護コンテンツを閲覧
 
-![](./screencapture/06.page-2-with-login.png
+![](./screencapture/06.page-2-with-login.png)
