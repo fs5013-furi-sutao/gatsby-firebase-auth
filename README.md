@@ -574,7 +574,7 @@ export default RegisterPage
 ### page-2.jsx
 
 ``` jsx
-import * as React from 'react'
+import React from 'react'
 import { Link } from 'gatsby'
 
 import Layout from '../components/layout'
