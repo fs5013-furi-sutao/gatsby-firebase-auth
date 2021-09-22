@@ -1,9 +1,8 @@
-// If you don't want to use TypeScript you can delete this file!
-import * as React from "react"
-import { PageProps, Link, graphql } from "gatsby"
+import React from 'react'
+import { PageProps, Link, graphql } from 'gatsby'
 
-import Layout from "../components/layout"
-import Seo from "../components/seo"
+import Layout from '../components/layout'
+import Seo from '../components/seo'
 
 type DataProps = {
   site: {
@@ -11,31 +10,37 @@ type DataProps = {
   }
 }
 
-const UsingTypescript: React.FC<PageProps<DataProps>> = ({ data, path }) => (
-  <Layout>
+const UsingTypescript: React.FC<PageProps<DataProps>> = ({ data, path, ...props }) => (
+  <Layout props={props}>
     <Seo title="Using TypeScript" />
-    <h1>Gatsby supports TypeScript by default!</h1>
+    <h1>標準で TypeScript をサポートしています</h1>
     <p>
-      This means that you can create and write <em>.ts/.tsx</em> files for your
-      pages, components etc. Please note that the <em>gatsby-*.js</em> files
-      (like gatsby-node.js) currently don't support TypeScript yet.
+      ページやコンポーネントなどのために、<code>.ts/.tsx</code> ファイルを作成し、
+      記述することができます。なお、<code>gatsby-*.js</code> ファイル
+      (<code>gatsby-node.js</code> と同様)は、現在のところ TypeScript をサポートしていません。
     </p>
     <p>
-      For type checking you'll want to install <em>typescript</em> via npm and
-      run <em>tsc --init</em> to create a <em>tsconfig</em> file.
+      タイプチェックのためには、npm 経由で typescript をインストールし、
+      <code>tsc --init</code> を実行して <code>tsconfig</code> ファイルを作成する必要があります。
     </p>
     <p>
-      You're currently on the page "{path}" which was built on{" "}
-      {data.site.buildTime}.
+      あなたは現在、{data.site.buildTime} に作成された
+      「{path}」というページにいます。
     </p>
     <p>
-      To learn more, head over to our{" "}
+      もっと詳しく知りたい方は、{" "}
       <a href="https://www.gatsbyjs.com/docs/typescript/">
-        documentation about TypeScript
+        TypeScript についてのドキュメント
       </a>
-      .
+      をご覧ください。
     </p>
-    <Link to="/">Go back to the homepage</Link>
+
+    <div>
+      <button className="form-button">
+        <Link to="/">ウェルカムページに戻る</Link>
+      </button>
+    </div>
+
   </Layout>
 )
 
