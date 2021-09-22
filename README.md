@@ -244,7 +244,13 @@ const Layout = ({ children, props }) => {
           path === '/' || path === '/login/' || path === '/register/' ?
             (<main>{children}</main>) :
             !user ?
-              (<main>アクセス禁止</main>) : (<main>{children}</main>)
+              (
+                <main>
+                  <h1 className="access-error-msg">
+                    アクセスエラー
+                  </h1>
+                </main>
+              ) : (<main>{children}</main>)
         }
         <footer
           style={{
