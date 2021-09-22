@@ -8,10 +8,6 @@
 
 3つのプラグインをインストールする
 
-``` console
-yarn add dotenv firebase gatsby-plugin-firebase
-```
-
 ``` json
 {
   "dependencies": {
@@ -20,6 +16,10 @@ yarn add dotenv firebase gatsby-plugin-firebase
     "gatsby-plugin-firebase": "^0.2.0-beta.4",
   },
 }
+```
+
+``` console
+yarn
 ```
 
 ## ローカルサーバの確認
