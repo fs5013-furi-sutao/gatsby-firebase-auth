@@ -298,7 +298,8 @@ const parseCodeToJaErrorMessage = (e) => {
         case 'auth/wrong-password':
             return 'メールアドレスまたはパスワードが違います';
         case 'auth/popup-blocked':
-            return '認証ポップアップがブロックされました。ポップアップブロックをご利用の場合は設定を解除してください';
+            return '認証ポップアップがブロックされました。\
+            ポップアップブロックをご利用の場合は設定を解除してください';
         case 'auth/operation-not-supported-in-this-environment':
         case 'auth/auth-domain-config-required':
         case 'auth/operation-not-allowed':
