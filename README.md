@@ -22,6 +22,15 @@ yarn add dotenv firebase gatsby-plugin-firebase
 }
 ```
 
+## ローカルサーバの確認
+
+ローカルサーバを起動し http://localhost:8000/ にアクセスして、
+Gatsby Default Starter のサイトが問題なく表示されることを確認する
+
+``` console
+yarn start
+```
+
 ## .env ファイルの作成
 
 ルートに .env ファイル作成し、Firebase の API キーを記載する
