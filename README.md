@@ -746,3 +746,41 @@ header {
   color: red;
 }
 ```
+
+## 画面確認
+
+### http://localhost:8000/
+
+未ログイン状態
+
+![](./screencapture/01.welcome-page-with-no-login.png)
+
+### http://localhost:8000/page-2
+
+ログインしていないためコンテンツ閲覧不可
+
+![](./screencapture/02.access-error-with-no-login.png)
+
+### http://localhost:8000/register
+
+ユーザー登録画面
+
+![](./screencapture/03.register.png)
+
+### http://localhost:8000/login
+
+ログイン画面
+
+![](./screencapture/04.login.png)
+
+### http://localhost:8000/login
+
+ログインエラー
+
+![](./screencapture/05.auth-invalid.png)
+
+### http://localhost:8000/page-2
+
+ログイン後に認証保護コンテンツを閲覧
+
+![](./screencapture/06.page-2-with-login.png
