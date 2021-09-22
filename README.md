@@ -133,11 +133,10 @@ import { AuthContext } from "../context/auth"
 import firebase from 'gatsby-plugin-firebase'
 
 const Header = ({ siteTitle, props }) => {
+  
   const { user } = useContext(AuthContext)
-
   const { path } = props
-  console.log('path=')
-  console.log(path)
+
   const handleLogout = async () => {
     await firebase.auth().signOut()
     navigate("/login")
