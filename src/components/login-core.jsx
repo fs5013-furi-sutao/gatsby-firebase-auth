@@ -58,10 +58,10 @@ const LoginCore = () => {
                         placeholder="password"
                     />
                 </div>
-                {data.error ? <p className="error-message">
+                {data.error ? (<p className="error-message">
                     {
                         parseCodeToJaErrorMessage(data)
-                    }</p> : <p>&nbsp;</p>
+                    }</p>) : (<p>&nbsp;</p>)
                 }
             </div>
             <input className="form-button" type="submit" value="ログインする" />
